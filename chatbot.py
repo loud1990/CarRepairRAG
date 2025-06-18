@@ -22,23 +22,30 @@ embeddings = OpenAIEmbeddings(
 )
 
 
-pdf_path = "2024CorvetteOwnersManual.pdf"
+pdf_directory = "pdfs" # Directory where your PDF files are stored
 
 print("\nWelcome to the Corvette Owners Manual Chatbot! Type quit and hit enter to exit.\n")
 
-# Safety measure I have put for debugging purposes :)
-if not os.path.exists(pdf_path):
-    raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+# Ensure the PDF directory exists
+if not os.path.exists(pdf_directory):
+    raise FileNotFoundError(f"PDF directory not found: {pdf_directory}")
 
-pdf_loader = PyPDFLoader(pdf_path) # This loads the PDF
+all_pages = []
+for filename in os.listdir(pdf_directory):
+    if filename.endswith(".pdf"):
+        pdf_path = os.path.join(pdf_directory, filename)
+        pdf_loader = PyPDFLoader(pdf_path)
+        try:
+            pages = pdf_loader.load()
+            all_pages.extend(pages)
+            print(f"Loaded {len(pages)} pages from {filename}")
+        except Exception as e:
+            print(f"Error loading PDF {filename}: {e}")
 
-# Checks if the PDF is there
-try:
-    pages = pdf_loader.load()
-    print(f"PDF has been loaded and has {len(pages)} pages")
-except Exception as e:
-    print(f"Error loading PDF: {e}")
-    raise
+if not all_pages:
+    raise ValueError("No PDF documents were loaded from the specified directory.")
+
+print(f"\nTotal pages loaded from all PDFs: {len(all_pages)}")
 
 # Chunking Process
 text_splitter = RecursiveCharacterTextSplitter(
@@ -46,10 +53,9 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=200
 )
 
+pages_split = text_splitter.split_documents(all_pages) # We now apply this to our pages
 
-pages_split = text_splitter.split_documents(pages) # We now apply this to our pages
-
-persist_directory = r"C:\Users\loud1\OneDrive\Documents\Development\langgraphtut"
+persist_directory = r"C:\Users\loud1\Development\AIDev\CarRepairRAG"
 collection_name = "vette_manual"
 
 # If our collection does not exist in the directory, we create using the os command

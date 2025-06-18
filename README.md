@@ -37,3 +37,7 @@ python chatbot.py
 ```
 
 The chatbot should now be running and ready to use.
+
+### Notes
+
+At any time, you may type `quit` and hit enter to exit the chatbot.

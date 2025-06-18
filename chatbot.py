@@ -24,6 +24,7 @@ embeddings = OpenAIEmbeddings(
 
 pdf_path = "2024CorvetteOwnersManual.pdf"
 
+print("\nWelcome to the Corvette Owners Manual Chatbot! Type quit and hit enter to exit.\n")
 
 # Safety measure I have put for debugging purposes :)
 if not os.path.exists(pdf_path):

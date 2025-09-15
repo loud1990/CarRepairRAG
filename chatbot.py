@@ -10,11 +10,12 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_core.tools import tool
+import chromadb
 
 load_dotenv()
 
 llm = ChatOpenAI(
-    model="gpt-4o", temperature = 0) # I want to minimize hallucination - temperature = 0 makes the model output more deterministic 
+    model="gpt-5", temperature = 1) # I want to minimize hallucination - temperature = 0 makes the model output more deterministic 
 
 # Our Embedding Model - has to also be compatible with the LLM
 embeddings = OpenAIEmbeddings(
@@ -26,26 +27,7 @@ pdf_directory = "pdfs" # Directory where your PDF files are stored
 
 print("\nWelcome to the Corvette Owners Manual Chatbot! Type quit and hit enter to exit.\n")
 
-# Ensure the PDF directory exists
-if not os.path.exists(pdf_directory):
-    raise FileNotFoundError(f"PDF directory not found: {pdf_directory}")
 
-all_pages = []
-for filename in os.listdir(pdf_directory):
-    if filename.endswith(".pdf"):
-        pdf_path = os.path.join(pdf_directory, filename)
-        pdf_loader = PyPDFLoader(pdf_path)
-        try:
-            pages = pdf_loader.load()
-            all_pages.extend(pages)
-            print(f"Loaded {len(pages)} pages from {filename}")
-        except Exception as e:
-            print(f"Error loading PDF {filename}: {e}")
-
-if not all_pages:
-    raise ValueError("No PDF documents were loaded from the specified directory.")
-
-print(f"\nTotal pages loaded from all PDFs: {len(all_pages)}")
 
 # Chunking Process
 text_splitter = RecursiveCharacterTextSplitter(
@@ -53,29 +35,48 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=200
 )
 
-pages_split = text_splitter.split_documents(all_pages) # We now apply this to our pages
 
-persist_directory = r"C:\Users\loud1\Development\AIDev\CarRepairRAG"
+persist_directory = "./chroma_db"
 collection_name = "vette_manual"
 
-# If our collection does not exist in the directory, we create using the os command
-if not os.path.exists(persist_directory):
-    os.makedirs(persist_directory)
 
-
+client = chromadb.PersistentClient(path=persist_directory)
 try:
-    # Here, we actually create the chroma database using our embeddigns model
+    collection = client.get_collection(collection_name)
+    vectorstore = Chroma(client=client, collection_name=collection_name, persist_directory=persist_directory, embedding_function=embeddings)
+    print("Loaded existing ChromaDB vector store!")
+except Exception:
+    print("No existing collection found. Creating new one...")
+    # Ensure the PDF directory exists
+    if not os.path.exists(pdf_directory):
+        raise FileNotFoundError(f"PDF directory not found: {pdf_directory}")
+
+    all_pages = []
+    for filename in os.listdir(pdf_directory):
+        if filename.endswith(".pdf"):
+            pdf_path = os.path.join(pdf_directory, filename)
+            pdf_loader = PyPDFLoader(pdf_path)
+            try:
+                pages = pdf_loader.load()
+                all_pages.extend(pages)
+                print(f"Loaded {len(pages)} pages from {filename}")
+            except Exception as e:
+                print(f"Error loading PDF {filename}: {e}")
+
+    if not all_pages:
+        raise ValueError("No PDF documents were loaded from the specified directory.")
+
+    print(f"\nTotal pages loaded from all PDFs: {len(all_pages)}")
+
+    pages_split = text_splitter.split_documents(all_pages)
+
     vectorstore = Chroma.from_documents(
         documents=pages_split,
         embedding=embeddings,
         persist_directory=persist_directory,
         collection_name=collection_name
     )
-    print(f"Created ChromaDB vector store!")
-    
-except Exception as e:
-    print(f"Error setting up ChromaDB: {str(e)}")
-    raise
+    print("Created ChromaDB vector store!")
 
 
 # Now we create our retriever 

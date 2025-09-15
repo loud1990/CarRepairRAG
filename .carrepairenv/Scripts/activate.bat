@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set "VIRTUAL_ENV=C:\Users\loud1\Development\AIDev\CarRepairRAG\.carrepairenv"
+set "VIRTUAL_ENV=C:\Development\CarRepairRAG\.carrepairenv"
 
 if not defined PROMPT set PROMPT=$P$G
 

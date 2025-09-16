@@ -4,3 +4,6 @@ chroma_db/
 .carrepairenv/
 .vscode/
 chroma.sqlite3
+chat_history*.json
+src/__pycache__/
+*.pyc

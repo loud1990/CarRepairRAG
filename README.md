@@ -135,3 +135,83 @@ It prints:
 - Sample chunk metadata preview
 
 If you disable hierarchical chunking (`HIERARCHICAL_CHUNKING=false`) and rebuild, the script will reflect legacy metadata (fewer enriched fields).
+
+## Hybrid Search (Dense + Sparse)
+
+### What is Hybrid Search
+- Combines dense semantic retrieval with sparse keyword (BM25) search to balance intent understanding with exact term matching.
+- Fusion method: Weighted Reciprocal Rank Fusion (RRF)
+  - score(d) = dense_weight * 1/(rrf_k + rank_dense(d)) + sparse_weight * 1/(rrf_k + rank_sparse(d))
+  - Implemented in [HybridRetriever.invoke()](src/vectorstore.py:266); constructed by [VectorStoreManager.build_retriever()](src/vectorstore.py:188).
+
+### Dependencies and Setup
+- BM25 dependency is included in [requirements.txt](requirements.txt) (rank-bm25).
+- Install:
+  ```
+  pip install -r requirements.txt
+  ```
+- Create/update `.env`:
+  ```
+  OPENAI_API_KEY=your_api_key_here
+  RETRIEVAL_MODE=hybrid
+  TOP_K=3
+  DENSE_WEIGHT=0.5
+  SPARSE_WEIGHT=0.5
+  RRF_K=60
+  ```
+
+### Runtime Toggles (CLI and Env)
+- Flags parsed in [main._parse_retrieval_args()](main.py:165):
+  - --retrieval-mode {semantic,keyword,hybrid}
+  - --k INT
+  - --dense-weight FLOAT
+  - --sparse-weight FLOAT
+  - --rrf-k INT
+- Windows-friendly examples:
+  ```
+  python main.py --retrieval-mode hybrid --k 5
+  python main.py --retrieval-mode keyword --k 5
+  python main.py --retrieval-mode semantic --k 3
+  python main.py --retrieval-mode hybrid --k 5 --dense-weight 0.7 --sparse-weight 0.3 --rrf-k 60
+  ```
+- Mapping:
+  - keyword = strict keyword BM25 search (sparse)
+  - semantic = intent-focused dense vectors
+  - default = hybrid
+- The retriever is constructed at [main.py](main.py:218) via [VectorStoreManager.build_retriever()](src/vectorstore.py:188) and passed unchanged into [run_agent()](src/agent.py:94).
+
+### Architecture Pointers
+- Builders and hybrid:
+  - [VectorStoreManager.get_dense_retriever()](src/vectorstore.py:169)
+  - [VectorStoreManager.get_sparse_retriever()](src/vectorstore.py:148)
+  - [VectorStoreManager.build_retriever()](src/vectorstore.py:188)
+  - [HybridRetriever.invoke()](src/vectorstore.py:266)
+- Identity helper (stable IDs for dedupe/tests):
+  - [VectorStoreManager._doc_identity()](src/vectorstore.py:31)
+- Agent integration (retriever is injected and used):
+  - [retriever_tool()](src/agent.py:17)
+  - [run_agent()](src/agent.py:94)
+- CLI parse and call site:
+  - [main._parse_retrieval_args()](main.py:165)
+  - [main.py](main.py:218)
+
+### Retrieval Sanity Checks
+- Harness: [scripts/sanity_check.py](scripts/sanity_check.py)
+- Run:
+  ```
+  python scripts/sanity_check.py
+  python scripts/sanity_check.py --mode hybrid --k 5
+  python scripts/sanity_check.py --mode keyword --k 5
+  python scripts/sanity_check.py --mode semantic --k 3
+  python scripts/sanity_check.py --mode all --queries "tire pressure,oil change interval"
+  ```
+- Validates:
+  - Results per mode, up to k.
+  - No duplicate chunk identities.
+  - Displays sparse_score and hybrid_rrf_score when present.
+
+### Troubleshooting and Notes
+- Ensure OPENAI_API_KEY is set in `.env`.
+- Rebuild vector DB if needed (see Reindex/Rebuild section above). Dense index is loaded/built at runtime by [VectorStoreManager.get_or_create()](src/vectorstore.py:46); sparse retriever is built on demand by [VectorStoreManager.get_sparse_retriever()](src/vectorstore.py:148).
+- Persistence: Chroma collection persisted under `./chroma_db` (default in [VectorStoreManager.__init__()](src/vectorstore.py:13)).
+- Hybrid Search is drop-in; agent logic is unchanged and continues to use the injected retriever via [retriever_tool()](src/agent.py:17) and [run_agent()](src/agent.py:94).

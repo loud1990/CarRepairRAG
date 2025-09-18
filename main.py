@@ -5,6 +5,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 import sys
 import time
 import threading
+import argparse
 from langchain.callbacks.base import BaseCallbackHandler
 from src import DocumentLoader, VectorStoreManager
 from src.agent import run_agent
@@ -161,6 +162,39 @@ class StreamingWithSpinnerHandler(BaseCallbackHandler):
         except Exception:
             pass
 
+def _parse_retrieval_args():
+    """
+    Parse CLI args controlling retrieval mode and parameters.
+    Defaults come from environment variables (loaded via .env).
+    """
+    parser = argparse.ArgumentParser(description="Car Repair RAG Chatbot")
+    parser.add_argument(
+        "--retrieval-mode",
+        choices=["semantic", "keyword", "hybrid"],
+        default=os.getenv("RETRIEVAL_MODE", "hybrid"),
+        help="Retrieval mode: semantic (dense), keyword (sparse), or hybrid.")
+    parser.add_argument(
+        "--k",
+        type=int,
+        default=int(os.getenv("TOP_K", "3")),
+        help="Number of documents to retrieve (top-k).")
+    parser.add_argument(
+        "--dense-weight",
+        type=float,
+        default=float(os.getenv("DENSE_WEIGHT", "0.5")),
+        help="Weight for dense scores in hybrid fusion.")
+    parser.add_argument(
+        "--sparse-weight",
+        type=float,
+        default=float(os.getenv("SPARSE_WEIGHT", "0.5")),
+        help="Weight for sparse scores in hybrid fusion.")
+    parser.add_argument(
+        "--rrf-k",
+        type=int,
+        default=int(os.getenv("RRF_K", "60")),
+        help="Reciprocal Rank Fusion constant k.")
+    return parser.parse_args()
+
 load_dotenv()
 llm = ChatOpenAI(model="gpt-5-nano", temperature=1, http_client=httpx.Client(verify=False), streaming=True)
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small", http_client=httpx.Client(verify=False))
@@ -170,14 +204,24 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-small", http_client=httpx.
 use_hierarchical = os.getenv("HIERARCHICAL_CHUNKING", "true").lower() == "true"
 rebuild_flag = os.getenv("REBUILD_VDB", "false").lower() == "true"
 
+# Parse retrieval args (CLI with env defaults)
+args = _parse_retrieval_args()
+
 print("Welcome to the Car Repair RAG Chatbot! Type 'quit' to exit.")
 print(f"Config: HIERARCHICAL_CHUNKING={use_hierarchical} | REBUILD_VDB={rebuild_flag}")
+print(f"Retrieval Config: mode={args.retrieval_mode} | k={args.k} | dense_weight={args.dense_weight} | sparse_weight={args.sparse_weight} | rrf_k={args.rrf_k}")
 
 manager = VectorStoreManager(embeddings)
 if rebuild_flag:
     manager.rebuild()
 vectorstore = manager.get_or_create()
-retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+retriever = manager.build_retriever(
+    mode=args.retrieval_mode,
+    k=args.k,
+    dense_weight=args.dense_weight,
+    sparse_weight=args.sparse_weight,
+    rrf_k=args.rrf_k,
+)
 
 while True:
     user_input = input("\nWhat is your question: ")

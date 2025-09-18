@@ -25,9 +25,31 @@ def create_agent(llm, retriever):
 
         results = []
         for i, doc in enumerate(docs):
-            source = doc.metadata.get('source', 'Unknown')
-            results.append(f"Document {i+1} from {os.path.basename(source)}:\n{doc.page_content}")
-
+            meta = getattr(doc, "metadata", {}) or {}
+            source = meta.get('source', 'Unknown')
+            heading_path = meta.get('heading_path') or meta.get('heading')
+            section_level = meta.get('section_level')
+            page_start = meta.get('page_start')
+            page_end = meta.get('page_end')
+ 
+            header_bits = []
+            if heading_path:
+                header_bits.append(str(heading_path))
+            fname = os.path.basename(source) if source else "Unknown"
+            header_bits.append(fname)
+            if page_start is not None or page_end is not None:
+                if page_start is not None and page_end is not None and page_start != page_end:
+                    header_bits.append(f"pp. {page_start}-{page_end}")
+                else:
+                    p = page_start if page_start is not None else page_end
+                    header_bits.append(f"p. {p}")
+            if section_level is not None:
+                header_bits.append(f"level {section_level}")
+ 
+            header = " | ".join(header_bits)
+            body = doc.page_content
+            results.append(f"Result {i+1}: {header}\n{body}")
+ 
         return "\n\n".join(results)
 
     llm_with_tools = llm.bind_tools([retriever_tool])
@@ -95,7 +117,13 @@ def run_agent(user_input: str, session_id="default", retriever=None, llm=None):
             print(f"Skipping unknown message type: {msg_type}")
             continue
     initial_messages = [SystemMessage(content=system_prompt)] + history_messages + [HumanMessage(content=user_input)]
-    result = graph.invoke({"messages": initial_messages})
+    # Configure LangGraph recursion limit (default 25). Allow override via env.
+    _rec_str = os.getenv("RECURSION_LIMIT") or os.getenv("LANGGRAPH_RECURSION_LIMIT") or "50"
+    try:
+        _rec_limit = max(1, int(_rec_str))
+    except Exception:
+        _rec_limit = 50
+    result = graph.invoke({"messages": initial_messages}, config={"recursion_limit": _rec_limit})
     new_human = HumanMessage(content=user_input).dict()
     new_ai = result['messages'][-1].dict()
     full_history = history + [new_human, new_ai]

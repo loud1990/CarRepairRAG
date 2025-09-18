@@ -10,10 +10,15 @@ llm = ChatOpenAI(model="gpt-5", temperature=1, http_client=httpx.Client(verify=F
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small", http_client=httpx.Client(verify=False))
 # Temporary SSL bypass; fix certificates with 'conda install ca-certificates certifi' for production.
 
+# Configuration flags (can be set in .env)
+use_hierarchical = os.getenv("HIERARCHICAL_CHUNKING", "true").lower() == "true"
+rebuild_flag = os.getenv("REBUILD_VDB", "false").lower() == "true"
+
 print("Welcome to the Car Repair RAG Chatbot! Type 'quit' to exit.")
+print(f"Config: HIERARCHICAL_CHUNKING={use_hierarchical} | REBUILD_VDB={rebuild_flag}")
 
 manager = VectorStoreManager(embeddings)
-if os.getenv("REBUILD_VDB", "false").lower() == "true":
+if rebuild_flag:
     manager.rebuild()
 vectorstore = manager.get_or_create()
 retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})

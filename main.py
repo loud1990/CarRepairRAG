@@ -6,6 +6,9 @@ import sys
 import time
 import threading
 import argparse
+import random
+import re
+import unicodedata
 from langchain.callbacks.base import BaseCallbackHandler
 from src import DocumentLoader, VectorStoreManager
 from src.agent import run_agent
@@ -162,9 +165,47 @@ class StreamingWithSpinnerHandler(BaseCallbackHandler):
         except Exception:
             pass
 
+class CandidateRetriever:
+    """Shim to produce per-candidate context variations without changing agent code.
+    It samples/shuffles a subset of docs from the base retriever for each candidate.
+    """
+    def __init__(self, base, sample_k: int | None, shuffle: bool, rng: random.Random):
+        self.base = base
+        self.sample_k = int(sample_k) if sample_k is not None else None
+        self.shuffle = bool(shuffle)
+        self.rng = rng
+
+    def invoke(self, query: str):
+        docs = self.base.invoke(query)
+        try:
+            n = len(docs)
+        except Exception:
+            return docs
+        subset = list(docs)
+        if self.sample_k is not None and self.sample_k < n:
+            try:
+                subset = self.rng.sample(subset, self.sample_k)
+            except ValueError:
+                subset = subset[: self.sample_k]
+        if self.shuffle:
+            try:
+                self.rng.shuffle(subset)
+            except Exception:
+                pass
+        return subset
+
+def _normalize_for_vote(text: str) -> str:
+    """Normalize answer strings for majority voting."""
+    s = unicodedata.normalize("NFKC", str(text) if text is not None else "")
+    s = s.lower().strip()
+    # remove punctuation and control characters
+    s = "".join(ch for ch in s if not (unicodedata.category(ch).startswith("P") or unicodedata.category(ch).startswith("C")))
+    s = re.sub(r"\s+", " ", s)
+    return s
+
 def _parse_retrieval_args():
     """
-    Parse CLI args controlling retrieval mode and parameters.
+    Parse CLI args controlling retrieval mode and parameters, plus Self-Consistency & Multi-Query Fusion.
     Defaults come from environment variables (loaded via .env).
     """
     parser = argparse.ArgumentParser(description="Car Repair RAG Chatbot")
@@ -172,44 +213,131 @@ def _parse_retrieval_args():
         "--retrieval-mode",
         choices=["semantic", "keyword", "hybrid"],
         default=os.getenv("RETRIEVAL_MODE", "hybrid"),
-        help="Retrieval mode: semantic (dense), keyword (sparse), or hybrid.")
+        help="Retrieval mode: semantic (dense), keyword (sparse), or hybrid.",
+    )
     parser.add_argument(
         "--k",
         type=int,
         default=int(os.getenv("TOP_K", "3")),
-        help="Number of documents to retrieve (top-k).")
+        help="Number of documents to retrieve (top-k).",
+    )
     parser.add_argument(
         "--dense-weight",
         type=float,
         default=float(os.getenv("DENSE_WEIGHT", "0.5")),
-        help="Weight for dense scores in hybrid fusion.")
+        help="Weight for dense scores in hybrid fusion.",
+    )
     parser.add_argument(
         "--sparse-weight",
         type=float,
         default=float(os.getenv("SPARSE_WEIGHT", "0.5")),
-        help="Weight for sparse scores in hybrid fusion.")
+        help="Weight for sparse scores in hybrid fusion.",
+    )
     parser.add_argument(
         "--rrf-k",
         type=int,
         default=int(os.getenv("RRF_K", "60")),
-        help="Reciprocal Rank Fusion constant k.")
+        help="Reciprocal Rank Fusion constant k.",
+    )
+
+    group = parser.add_argument_group("Self-Consistency & Multi-Query Fusion")
+    group.add_argument(
+        "--self-consistency",
+        choices=["off", "majority"],
+        default=os.getenv("SELF_CONSISTENCY", "off"),
+        help="Self-consistency orchestration mode (off, majority).",
+    )
+    group.add_argument(
+        "--sc-candidates",
+        type=int,
+        default=int(os.getenv("SC_CANDIDATES", "3")),
+        help="Number of candidate answers K.",
+    )
+    dpc_env = os.getenv("SC_DOCS_PER_CANDIDATE")
+    group.add_argument(
+        "--sc-docs-per-candidate",
+        type=int,
+        default=(int(dpc_env) if dpc_env not in (None, "") else None),
+        help="Subset of retrieved docs per candidate (<= k). If not provided, use k.",
+    )
+    group.add_argument(
+        "--sc-shuffle-contexts",
+        action="store_true",
+        default=(os.getenv("SC_SHUFFLE_CONTEXTS", "").strip().lower() in ("1", "true", "yes")),
+        help="If set, shuffle the per-candidate doc order before formatting.",
+    )
+    group.add_argument(
+        "--temperature",
+        type=float,
+        default=float(os.getenv("TEMPERATURE", "1")),
+        help="Base LLM temperature for normal/SC runs.",
+    )
+    group.add_argument(
+        "--sc-temperature-jitter",
+        type=float,
+        default=float(os.getenv("SC_TEMPERATURE_JITTER", "0.0")),
+        help="Per-candidate jitter added/subtracted to base temperature.",
+    )
+    seed_env = os.getenv("SC_RANDOM_SEED")
+    group.add_argument(
+        "--sc-random-seed",
+        type=int,
+        default=(int(seed_env) if seed_env not in (None, "") else None),
+        help="Seed for repeatable candidate sampling/shuffling.",
+    )
+    group.add_argument(
+        "--multi-query",
+        action="store_true",
+        default=(os.getenv("MULTI_QUERY", "").strip().lower() in ("1", "true", "yes")),
+        help="Enable multi-query expansion/fusion.",
+    )
+    group.add_argument(
+        "--num-query-variants",
+        type=int,
+        default=int(os.getenv("NUM_QUERY_VARIANTS", "4")),
+        help="Number of query variants for expansion (>= 2 when enabled).",
+    )
+    group.add_argument(
+        "--expansion-method",
+        choices=["heuristic", "llm"],
+        default=os.getenv("EXPANSION_METHOD", "heuristic"),
+        help="Expansion method for multi-query fusion.",
+    )
+    mqr_env = os.getenv("MULTI_QUERY_RRF_K")
+    group.add_argument(
+        "--multi-query-rrf-k",
+        type=int,
+        default=(int(mqr_env) if mqr_env not in (None, "") else None),
+        help="Overrides RRF_K for multi-query fusion.",
+    )
     return parser.parse_args()
 
 load_dotenv()
-llm = ChatOpenAI(model="gpt-5-nano", temperature=1, http_client=httpx.Client(verify=False), streaming=True)
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small", http_client=httpx.Client(verify=False))
+
+# Parse CLI args (retrieval + self-consistency + multi-query fusion)
+args = _parse_retrieval_args()
+
+# LLM and embeddings using CLI/env temperature
+llm = ChatOpenAI(
+    model=os.getenv("CHAT_MODEL", "gpt-5-nano"),
+    temperature=float(args.temperature),
+    http_client=httpx.Client(verify=False),
+    streaming=True,
+)
+embeddings = OpenAIEmbeddings(
+    model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"),
+    http_client=httpx.Client(verify=False),
+)
 # Temporary SSL bypass; fix certificates with 'conda install ca-certificates certifi' for production.
 
 # Configuration flags (can be set in .env)
 use_hierarchical = os.getenv("HIERARCHICAL_CHUNKING", "true").lower() == "true"
 rebuild_flag = os.getenv("REBUILD_VDB", "false").lower() == "true"
 
-# Parse retrieval args (CLI with env defaults)
-args = _parse_retrieval_args()
-
 print("Welcome to the Car Repair RAG Chatbot! Type 'quit' to exit.")
 print(f"Config: HIERARCHICAL_CHUNKING={use_hierarchical} | REBUILD_VDB={rebuild_flag}")
 print(f"Retrieval Config: mode={args.retrieval_mode} | k={args.k} | dense_weight={args.dense_weight} | sparse_weight={args.sparse_weight} | rrf_k={args.rrf_k}")
+print(f"SC/MQ Config: self_consistency={args.self_consistency} | sc_candidates={args.sc_candidates} | sc_docs_per_cand={args.sc_docs_per_candidate} | sc_shuffle={args.sc_shuffle_contexts} | temperature={args.temperature} | sc_jitter={args.sc_temperature_jitter} | seed={args.sc_random_seed} | multi_query={args.multi_query} | num_variants={args.num_query_variants} | expansion_method={args.expansion_method} | multi_query_rrf_k={args.multi_query_rrf_k}")
 
 manager = VectorStoreManager(embeddings)
 if rebuild_flag:
@@ -221,6 +349,11 @@ retriever = manager.build_retriever(
     dense_weight=args.dense_weight,
     sparse_weight=args.sparse_weight,
     rrf_k=args.rrf_k,
+    multi_query=args.multi_query,
+    num_query_variants=args.num_query_variants,
+    expansion_method=args.expansion_method,
+    expansion_llm=(llm if args.expansion_method == "llm" else None),
+    multi_query_rrf_k=args.multi_query_rrf_k,
 )
 
 while True:
@@ -230,16 +363,75 @@ while True:
     try:
         spinner = Spinner("Thinking...")
         handler = StreamingWithSpinnerHandler(spinner, start_time=time.time(), min_delay=0.6, buffer_force_start_delay=0.5)
-        # Ensure this handler is used by the LLM for this request:
-        llm.callbacks = [handler]  # if llm is persistent
         spinner.start()
 
-        result = run_agent(user_input, retriever=retriever, llm=llm)
+        use_sc = (args.self_consistency == "majority") and (int(args.sc_candidates or 0) > 1)
+        if not use_sc:
+            # Normal path: preserve existing streaming behavior
+            llm.callbacks = [handler]  # if llm is persistent
+            result = run_agent(user_input, retriever=retriever, llm=llm)
 
-        # If no tokens ever arrived, spinner might still be running:
-        if spinner.is_running:
-            spinner.stop_and_clear()
-        print()  # newline to terminate streamed line
+            # If no tokens ever arrived, spinner might still be running:
+            if spinner.is_running:
+                spinner.stop_and_clear()
+            print()  # newline to terminate streamed line
+        else:
+            # Self-consistency (majority voting) path
+            base_model = getattr(llm, "model", os.getenv("CHAT_MODEL", "gpt-5-nano"))
+            rng_seed = args.sc_random_seed
+            base_rng = random.Random(rng_seed) if rng_seed is not None else random.Random()
+            candidates: list[str] = []
+            counts: dict[str, int] = {}
+            norm_map: dict[str, dict] = {}
+            sample_k = args.sc_docs_per_candidate if args.sc_docs_per_candidate is not None else args.k
+            try:
+                sample_k = int(sample_k)
+            except Exception:
+                sample_k = args.k
+
+            for i in range(int(args.sc_candidates)):
+                jitter_span = float(args.sc_temperature_jitter)
+                jitter = base_rng.uniform(-jitter_span, jitter_span) if jitter_span > 0 else 0.0
+                temp_i = max(0.0, min(2.0, float(args.temperature) + float(jitter)))
+                llm_i = ChatOpenAI(
+                    model=base_model,
+                    temperature=temp_i,
+                    http_client=httpx.Client(verify=False),
+                    streaming=False,
+                )
+                cand_retriever = CandidateRetriever(
+                    base=retriever,
+                    sample_k=sample_k,
+                    shuffle=bool(args.sc_shuffle_contexts),
+                    rng=random.Random((int(rng_seed) if rng_seed is not None else 0) + i),
+                )
+                ans_i = run_agent(user_input, retriever=cand_retriever, llm=llm_i)
+                candidates.append(ans_i)
+
+            # Aggregate votes
+            for idx, ans in enumerate(candidates):
+                key = _normalize_for_vote(ans)
+                if key not in norm_map:
+                    norm_map[key] = {"text": ans, "first_index": idx}
+                counts[key] = counts.get(key, 0) + 1
+
+            def _select_winner_key(items):
+                return max(
+                    items,
+                    key=lambda kv: (kv[1], len(norm_map[kv[0]]["text"]), -norm_map[kv[0]]["first_index"]),
+                )[0]
+
+            winner_key = _select_winner_key(list(counts.items())) if counts else ""
+            final_answer = norm_map.get(winner_key, {"text": (candidates[0] if candidates else "")})["text"]
+
+            if spinner.is_running:
+                spinner.stop_and_clear()
+            print("Self-Consistency summary (majority vote):")
+            for k, c in sorted(counts.items(), key=lambda kv: kv[1], reverse=True):
+                snippet = k[:100]
+                print(f"- {c}x: {snippet}")
+            print("\nAssistant: " + final_answer)
+
     except Exception as e:
         # Ensure spinner is cleared on any error path
         try:

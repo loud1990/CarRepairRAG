@@ -1,11 +1,13 @@
 import os
 import hashlib
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Any
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from src.data_loader import DocumentLoader
 from src.sparse_index import build_sparse_retriever
+from src.query_expander import QueryExpander
+from src.fusion import MultiQueryFusionRetriever
 import chromadb
 
 
@@ -192,6 +194,11 @@ class VectorStoreManager:
         dense_weight: float = 0.5,
         sparse_weight: float = 0.5,
         rrf_k: int = 60,
+        multi_query: bool = False,
+        num_query_variants: int = 1,
+        expansion_method: Literal["llm", "heuristic"] = "heuristic",
+        expansion_llm: Optional[Any] = None,
+        multi_query_rrf_k: Optional[int] = None,
     ):
         """
         Create a unified retriever according to the requested mode.
@@ -200,25 +207,43 @@ class VectorStoreManager:
         - keyword: sparse BM25 retriever
         - hybrid: fuse dense + sparse via Weighted Reciprocal Rank Fusion (RRF)
         
+        When multi_query is enabled and num_query_variants > 1, wraps the base retriever
+        with a MultiQueryFusionRetriever that expands queries and fuses results via RRF.
+        
         Returns:
             A retriever-like object exposing invoke(query: str) -> List[Document].
         """
+        # Build base retriever according to mode (unchanged defaults)
         if mode == "semantic":
-            return self.get_dense_retriever(k=k)
-        if mode == "keyword":
-            return self.get_sparse_retriever(k=k)
-        
-        # Default to hybrid
-        dense = self.get_dense_retriever(k=k)
-        sparse = self.get_sparse_retriever(k=k)
-        return HybridRetriever(
-            dense_retriever=dense,
-            sparse_retriever=sparse,
-            top_k=int(k) if k is not None else 3,
-            dense_weight=float(dense_weight),
-            sparse_weight=float(sparse_weight),
-            rrf_k=int(rrf_k) if rrf_k is not None else 60,
-        )
+            base = self.get_dense_retriever(k=k)
+        elif mode == "keyword":
+            base = self.get_sparse_retriever(k=k)
+        else:
+            # Default to hybrid
+            dense = self.get_dense_retriever(k=k)
+            sparse = self.get_sparse_retriever(k=k)
+            base = HybridRetriever(
+                dense_retriever=dense,
+                sparse_retriever=sparse,
+                top_k=int(k) if k is not None else 3,
+                dense_weight=float(dense_weight),
+                sparse_weight=float(sparse_weight),
+                rrf_k=int(rrf_k) if rrf_k is not None else 60,
+            )
+
+        # Optionally wrap with multi-query fusion
+        if bool(multi_query) and int(num_query_variants) > 1:
+            expander = QueryExpander(llm=expansion_llm, default_method=expansion_method)
+            return MultiQueryFusionRetriever(
+                base_retriever=base,
+                expander=expander,
+                top_k=int(k) if k is not None else 3,
+                n_variants=int(num_query_variants),
+                rrf_k=int(multi_query_rrf_k) if multi_query_rrf_k is not None else (int(rrf_k) if rrf_k is not None else 60),
+                expansion_method=expansion_method,
+            )
+
+        return base
 
 
 class HybridRetriever:

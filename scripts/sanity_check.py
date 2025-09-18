@@ -65,6 +65,17 @@ def parse_cli_args() -> argparse.Namespace:
     --sparse-weight float
     --rrf-k int
     --queries str (comma-separated)
+
+    Multi-Query Fusion options:
+      --multi-query (flag): enable multi-query expansion/fusion
+      --num-query-variants (int): number of expansion variants (>= 2 recommended when enabled)
+      --expansion-method {heuristic,llm}
+      --multi-query-rrf-k (int, optional): overrides RRF_K for multi-query fusion
+
+    Examples:
+      python scripts/sanity_check.py --mode hybrid --multi-query --num-query-variants 6
+      python scripts/sanity_check.py --mode semantic --multi-query --expansion-method heuristic --k 5
+      python scripts/sanity_check.py --mode keyword --multi-query --num-query-variants 8 --multi-query-rrf-k 80
     """
     # .env already loaded above; still safe to call again
     load_dotenv()
@@ -105,6 +116,37 @@ def parse_cli_args() -> argparse.Namespace:
         default=None,
         help="Comma-separated list of test queries. If omitted, defaults to 'tire pressure,oil change interval'.",
     )
+
+    # Multi-Query Fusion flags (defaults from env to align with main)
+    mq_default = (os.getenv("MULTI_QUERY", "").strip().lower() in ("1", "true", "yes"))
+    mq_rrf_env = os.getenv("MULTI_QUERY_RRF_K", None)
+    mq_rrf_default = int(mq_rrf_env) if mq_rrf_env not in (None, "") else None
+
+    parser.add_argument(
+        "--multi-query",
+        action="store_true",
+        default=mq_default,
+        help="Enable multi-query expansion/fusion. Default from env MULTI_QUERY in ('1','true','yes').",
+    )
+    parser.add_argument(
+        "--num-query-variants",
+        type=int,
+        default=int(os.getenv("NUM_QUERY_VARIANTS", "4")),
+        help="Number of expansion variants when multi-query is enabled.",
+    )
+    parser.add_argument(
+        "--expansion-method",
+        choices=["heuristic", "llm"],
+        default=os.getenv("EXPANSION_METHOD", "heuristic"),
+        help="Expansion method for multi-query; this harness does not instantiate LLMs.",
+    )
+    parser.add_argument(
+        "--multi-query-rrf-k",
+        type=int,
+        default=mq_rrf_default,
+        help="Optional override for RRF K used in multi-query fusion (default falls back to --rrf-k).",
+    )
+
     return parser.parse_args()
 
 
@@ -115,6 +157,7 @@ def _format_row(rank: int, doc: Document) -> str:
     source = meta.get("source", "")
     s_val = meta.get("sparse_score")
     rrf_val = meta.get("hybrid_rrf_score")
+    mq_rrf_val = meta.get("multi_query_rrf_score")
     try:
         s_score_str = f"{float(s_val):.4f}"
     except Exception:
@@ -123,7 +166,14 @@ def _format_row(rank: int, doc: Document) -> str:
         rrf_str = f"{float(rrf_val):.6f}"
     except Exception:
         rrf_str = "-" if rrf_val is None else str(rrf_val)
-    return f"{rank:>3} | id={ident} | page={page or '-':>3} | source={source or '-'} | sparse_score={s_score_str} | hybrid_rrf_score={rrf_str}"
+    try:
+        mq_rrf_str = f"{float(mq_rrf_val):.6f}"
+    except Exception:
+        mq_rrf_str = "-" if mq_rrf_val is None else str(mq_rrf_val)
+    return (
+        f"{rank:>3} | id={ident} | page={page or '-':>3} | source={source or '-'}"
+        f" | sparse_score={s_score_str} | hybrid_rrf_score={rrf_str} | multi_query_rrf_score={mq_rrf_str}"
+    )
 
 
 def _print_header(mode: str, query: str, k: int) -> None:
@@ -139,13 +189,32 @@ def run_for_mode(
     sparse_weight: float,
     rrf_k: int,
     queries: List[str],
+    multi_query: bool,
+    num_query_variants: int,
+    expansion_method: str,
+    multi_query_rrf_k: Optional[int],
 ) -> None:
+    # Log resolved Multi-Query config for this mode
+    effective_mq_rrf_k = multi_query_rrf_k if multi_query_rrf_k is not None else rrf_k
+    print(
+        f"[Mode={mode}] MQ config: multi_query={bool(multi_query)} | "
+        f"num_query_variants={int(num_query_variants)} | expansion_method={expansion_method} | "
+        f"multi_query_rrf_k={multi_query_rrf_k if multi_query_rrf_k is not None else f'(fallback to rrf_k={rrf_k})'}"
+    )
+    if bool(multi_query) and int(num_query_variants) <= 1:
+        print("Warning: multi-query enabled but num_query_variants <= 1; fusion is disabled (no-op).")
+
     retriever = manager.build_retriever(
         mode=mode,
         k=k,
         dense_weight=dense_weight,
         sparse_weight=sparse_weight,
         rrf_k=rrf_k,
+        multi_query=multi_query,
+        num_query_variants=num_query_variants,
+        expansion_method=expansion_method,
+        expansion_llm=None,  # retrieval-only harness; do not instantiate LLMs here
+        multi_query_rrf_k=multi_query_rrf_k,
     )
     for q in queries:
         _print_header(mode, q, k)
@@ -198,7 +267,19 @@ def main() -> int:
     manager.get_or_create()
     # Run checks
     for m in modes:
-        run_for_mode(manager, m, args.k, args.dense_weight, args.sparse_weight, args.rrf_k, queries)
+        run_for_mode(
+            manager,
+            m,
+            args.k,
+            args.dense_weight,
+            args.sparse_weight,
+            args.rrf_k,
+            queries,
+            args.multi_query,
+            args.num_query_variants,
+            args.expansion_method,
+            args.multi_query_rrf_k,
+        )
     print("\nAll sanity checks completed successfully.")
     return 0
 

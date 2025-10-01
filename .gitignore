@@ -7,3 +7,4 @@ chroma.sqlite3
 chat_history*.json
 src/__pycache__/
 *.pyc
+.venv/

@@ -8,6 +8,7 @@ from src.data_loader import DocumentLoader
 from src.sparse_index import build_sparse_retriever
 from src.query_expander import QueryExpander
 from src.fusion import MultiQueryFusionRetriever
+from langsmith import traceable
 import chromadb
 
 
@@ -147,6 +148,7 @@ class VectorStoreManager:
             )
         print("Rebuilt ChromaDB vector store!")
 
+    @traceable(name="sparse_retrieval")
     def get_sparse_retriever(self, k: int = 5):
         """
         Build (once) and return a sparse-only BM25 retriever over the same document chunks
@@ -168,6 +170,7 @@ class VectorStoreManager:
         self._sparse_retriever = build_sparse_retriever(docs, top_k=int(k) if k is not None else 5)
         return self._sparse_retriever
 
+    @traceable(name="dense_retrieval")
     def get_dense_retriever(self, k: int = 3, search_type: str = "similarity"):
         """
         Build and return a dense (semantic) retriever backed by the Chroma vector store.
@@ -288,7 +291,9 @@ class HybridRetriever:
         raw = f"{src}|{pg}|{sample}"
         return hashlib.sha1(raw.encode("utf-8", errors="ignore")).hexdigest()
 
+    @traceable(name="hybrid_retrieval")
     def invoke(self, query: str) -> List[Document]:
+        """Hybrid retrieval with RRF fusion."""
         # Retrieve candidates
         dense_list: List[Document] = []
         sparse_list: List[Document] = []

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Literal, TYPE_CHECKING
 import hashlib
+from langsmith import traceable
 
 if TYPE_CHECKING:
     # For type hints only; not imported at runtime
@@ -103,6 +104,7 @@ class MultiQueryFusionRetriever:
             add(v)
         return final
 
+    @traceable(name="multi_query_fusion")
     def invoke(self, query: str) -> List["Document"]:
         """
         Execute multi-query retrieval and fuse with RRF.

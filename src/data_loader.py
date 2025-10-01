@@ -12,10 +12,10 @@ class DocumentLoader:
         pdf_directory: str = "pdfs",
         use_hierarchical: Optional[bool] = None,
         min_chunk_tokens: int = 200,
-        max_chunk_tokens: int = 1000,
+        max_chunk_tokens: int = 600,
         overlap_tokens: int = 100,
-        chunk_size: int = 1000,
-        chunk_overlap: int = 200,
+        chunk_size: int = 600,
+        chunk_overlap: int = 150,
     ):
         self.pdf_directory = pdf_directory
         # Default to env flag (on by default) if not explicitly provided

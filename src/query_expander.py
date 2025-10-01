@@ -12,6 +12,7 @@ The implementation is pure and side-effect free.
 from typing import Any, List, Optional, Literal, Iterable, Set, Sequence
 import json
 import re
+from langsmith import traceable
 
 __all__ = ["QueryExpander"]
 
@@ -252,6 +253,7 @@ class QueryExpander:
             candidates = candidates[:n]
         return candidates
 
+    @traceable(name="query_expansion")
     def expand(self, query: str, n: int = 4, method: Optional[Literal["llm", "heuristic"]] = None) -> List[str]:
         """
         Generate up to n unique query variants, including the original as the first element.
@@ -268,6 +270,7 @@ class QueryExpander:
         if n == 0:
             return []
         chosen: Literal["llm", "heuristic"] = method or self._default_method
+        
         # Collect expansions
         expansions: List[str]
         if chosen == "llm":

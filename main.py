@@ -10,6 +10,8 @@ import random
 import re
 import unicodedata
 from langchain.callbacks.base import BaseCallbackHandler
+from langsmith import traceable
+from langgraph.errors import GraphRecursionError
 from src import DocumentLoader, VectorStoreManager
 from src.agent import run_agent
 
@@ -356,6 +358,67 @@ retriever = manager.build_retriever(
     multi_query_rrf_k=args.multi_query_rrf_k,
 )
 
+@traceable(name="query_handler", metadata={"retrieval_mode": args.retrieval_mode, "self_consistency": args.self_consistency})
+def process_query(user_input: str, retriever, llm, args, handler):
+    """Process user query with optional self-consistency."""
+    use_sc = (args.self_consistency == "majority") and (int(args.sc_candidates or 0) > 1)
+    
+    if not use_sc:
+        # Normal path: preserve existing streaming behavior
+        llm.callbacks = [handler]
+        result = run_agent(user_input, retriever=retriever, llm=llm)
+        return result, None
+    else:
+        # Self-consistency (majority voting) path
+        base_model = getattr(llm, "model", os.getenv("CHAT_MODEL", "gpt-5-nano"))
+        rng_seed = args.sc_random_seed
+        base_rng = random.Random(rng_seed) if rng_seed is not None else random.Random()
+        candidates: list[str] = []
+        counts: dict[str, int] = {}
+        norm_map: dict[str, dict] = {}
+        sample_k = args.sc_docs_per_candidate if args.sc_docs_per_candidate is not None else args.k
+        try:
+            sample_k = int(sample_k)
+        except Exception:
+            sample_k = args.k
+
+        for i in range(int(args.sc_candidates)):
+            jitter_span = float(args.sc_temperature_jitter)
+            jitter = base_rng.uniform(-jitter_span, jitter_span) if jitter_span > 0 else 0.0
+            temp_i = max(0.0, min(2.0, float(args.temperature) + float(jitter)))
+            llm_i = ChatOpenAI(
+                model=base_model,
+                temperature=temp_i,
+                http_client=httpx.Client(verify=False),
+                streaming=False,
+            )
+            cand_retriever = CandidateRetriever(
+                base=retriever,
+                sample_k=sample_k,
+                shuffle=bool(args.sc_shuffle_contexts),
+                rng=random.Random((int(rng_seed) if rng_seed is not None else 0) + i),
+            )
+            ans_i = run_agent(user_input, retriever=cand_retriever, llm=llm_i)
+            candidates.append(ans_i)
+
+        # Aggregate votes
+        for idx, ans in enumerate(candidates):
+            key = _normalize_for_vote(ans)
+            if key not in norm_map:
+                norm_map[key] = {"text": ans, "first_index": idx}
+            counts[key] = counts.get(key, 0) + 1
+
+        def _select_winner_key(items):
+            return max(
+                items,
+                key=lambda kv: (kv[1], len(norm_map[kv[0]]["text"]), -norm_map[kv[0]]["first_index"]),
+            )[0]
+
+        winner_key = _select_winner_key(list(counts.items())) if counts else ""
+        final_answer = norm_map.get(winner_key, {"text": (candidates[0] if candidates else "")})["text"]
+        
+        return final_answer, counts
+
 while True:
     user_input = input("\nWhat is your question: ")
     if user_input.lower() in ['quit', 'exit']:
@@ -365,73 +428,33 @@ while True:
         handler = StreamingWithSpinnerHandler(spinner, start_time=time.time(), min_delay=0.6, buffer_force_start_delay=0.5)
         spinner.start()
 
-        use_sc = (args.self_consistency == "majority") and (int(args.sc_candidates or 0) > 1)
-        if not use_sc:
-            # Normal path: preserve existing streaming behavior
-            llm.callbacks = [handler]  # if llm is persistent
-            result = run_agent(user_input, retriever=retriever, llm=llm)
-
-            # If no tokens ever arrived, spinner might still be running:
-            if spinner.is_running:
-                spinner.stop_and_clear()
-            print()  # newline to terminate streamed line
-        else:
-            # Self-consistency (majority voting) path
-            base_model = getattr(llm, "model", os.getenv("CHAT_MODEL", "gpt-5-nano"))
-            rng_seed = args.sc_random_seed
-            base_rng = random.Random(rng_seed) if rng_seed is not None else random.Random()
-            candidates: list[str] = []
-            counts: dict[str, int] = {}
-            norm_map: dict[str, dict] = {}
-            sample_k = args.sc_docs_per_candidate if args.sc_docs_per_candidate is not None else args.k
-            try:
-                sample_k = int(sample_k)
-            except Exception:
-                sample_k = args.k
-
-            for i in range(int(args.sc_candidates)):
-                jitter_span = float(args.sc_temperature_jitter)
-                jitter = base_rng.uniform(-jitter_span, jitter_span) if jitter_span > 0 else 0.0
-                temp_i = max(0.0, min(2.0, float(args.temperature) + float(jitter)))
-                llm_i = ChatOpenAI(
-                    model=base_model,
-                    temperature=temp_i,
-                    http_client=httpx.Client(verify=False),
-                    streaming=False,
-                )
-                cand_retriever = CandidateRetriever(
-                    base=retriever,
-                    sample_k=sample_k,
-                    shuffle=bool(args.sc_shuffle_contexts),
-                    rng=random.Random((int(rng_seed) if rng_seed is not None else 0) + i),
-                )
-                ans_i = run_agent(user_input, retriever=cand_retriever, llm=llm_i)
-                candidates.append(ans_i)
-
-            # Aggregate votes
-            for idx, ans in enumerate(candidates):
-                key = _normalize_for_vote(ans)
-                if key not in norm_map:
-                    norm_map[key] = {"text": ans, "first_index": idx}
-                counts[key] = counts.get(key, 0) + 1
-
-            def _select_winner_key(items):
-                return max(
-                    items,
-                    key=lambda kv: (kv[1], len(norm_map[kv[0]]["text"]), -norm_map[kv[0]]["first_index"]),
-                )[0]
-
-            winner_key = _select_winner_key(list(counts.items())) if counts else ""
-            final_answer = norm_map.get(winner_key, {"text": (candidates[0] if candidates else "")})["text"]
-
-            if spinner.is_running:
-                spinner.stop_and_clear()
+        result, counts = process_query(user_input, retriever, llm, args, handler)
+        
+        # If no tokens ever arrived, spinner might still be running:
+        if spinner.is_running:
+            spinner.stop_and_clear()
+        
+        if counts is not None:
+            # Self-consistency path output
             print("Self-Consistency summary (majority vote):")
             for k, c in sorted(counts.items(), key=lambda kv: kv[1], reverse=True):
                 snippet = k[:100]
                 print(f"- {c}x: {snippet}")
-            print("\nAssistant: " + final_answer)
+            print("\nAssistant: " + result)
+        else:
+            # Normal path output
+            print()  # newline to terminate streamed line
 
+    except GraphRecursionError as e:
+        # Handle LangGraph recursion limit error with user-friendly message
+        try:
+            if 'spinner' in locals() and spinner.is_running:
+                spinner.stop_and_clear()
+        except Exception:
+            pass
+        print(f"\n⚠️  Error: The system encountered a recursion limit while processing your question.")
+        print(f"\n{str(e)}")
+        print(f"\nThe chatbot is still running and ready for your next question.")
     except Exception as e:
         # Ensure spinner is cleared on any error path
         try:
@@ -439,4 +462,4 @@ while True:
                 spinner.stop_and_clear()
         except Exception:
             pass
-        print(f"Error: {e}")
+        print(f"\n⚠️  Error: {e}")

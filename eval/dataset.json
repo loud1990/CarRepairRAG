@@ -1,0 +1,1065 @@
+{
+  "Keys, Doors, and Windows": [
+    {
+      "query": "Can I disable passive locking on the Corvette?",
+      "expected_answer": "Yes, passive locking can be temporarily disabled by pressing and holding the unlock button on the interior door switch with a door open for 4 seconds, until three chimes are heard.",
+      "section": "Passive Locking",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "How does the rear cross traffic alert system work?",
+      "expected_answer": "The rear cross traffic alert system uses sensors to detect vehicles approaching from either side when reversing. It provides visual and audible alerts.",
+      "section": "Assistance Systems",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Give me a JSON summary of the convertible top troubleshooting steps.",
+      "expected_answer": {
+        "conditions": [
+          "Ignition must be on or in accessory mode",
+          "Trunk lid must be closed",
+          "Vehicle must be under 50 km/h (31 mph)"
+        ],
+        "next_steps": [
+          "Check for obstructions",
+          "Ensure electrical power is available",
+          "Use in-vehicle switch if remote fails"
+        ]
+      },
+      "section": "Convertible Top \u2013 Troubleshooting",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": {
+        "conditions": [
+          "..."
+        ],
+        "next_steps": [
+          "..."
+        ]
+      }
+    },
+    {
+      "query": "Example question 1 about keys, doors, and windows?",
+      "expected_answer": "This is a representative answer based on the Keys, Doors, and Windows section.",
+      "section": "Keys, Doors, and Windows",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about keys, doors, and windows?",
+      "expected_answer": "This is a representative answer based on the Keys, Doors, and Windows section.",
+      "section": "Keys, Doors, and Windows",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about keys, doors, and windows?",
+      "expected_answer": "This is a representative answer based on the Keys, Doors, and Windows section.",
+      "section": "Keys, Doors, and Windows",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about keys, doors, and windows?",
+      "expected_answer": "This is a representative answer based on the Keys, Doors, and Windows section.",
+      "section": "Keys, Doors, and Windows",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "high",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 5 about keys, doors, and windows?",
+      "expected_answer": "This is a representative answer based on the Keys, Doors, and Windows section.",
+      "section": "Keys, Doors, and Windows",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about keys, doors, and windows?",
+      "expected_answer": "This is a representative answer based on the Keys, Doors, and Windows section.",
+      "section": "Keys, Doors, and Windows",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    }
+  ],
+  "Seats and Restraints": [
+    {
+      "query": "Example question 1 about seats and restraints?",
+      "expected_answer": "This is a representative answer based on the Seats and Restraints section.",
+      "section": "Seats and Restraints",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about seats and restraints?",
+      "expected_answer": "This is a representative answer based on the Seats and Restraints section.",
+      "section": "Seats and Restraints",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about seats and restraints?",
+      "expected_answer": "This is a representative answer based on the Seats and Restraints section.",
+      "section": "Seats and Restraints",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about seats and restraints?",
+      "expected_answer": "This is a representative answer based on the Seats and Restraints section.",
+      "section": "Seats and Restraints",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about seats and restraints?",
+      "expected_answer": "This is a representative answer based on the Seats and Restraints section.",
+      "section": "Seats and Restraints",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about seats and restraints?",
+      "expected_answer": "This is a representative answer based on the Seats and Restraints section.",
+      "section": "Seats and Restraints",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "medium",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    }
+  ],
+  "Storage": [
+    {
+      "query": "Example question 1 about storage?",
+      "expected_answer": "This is a representative answer based on the Storage section.",
+      "section": "Storage",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about storage?",
+      "expected_answer": "This is a representative answer based on the Storage section.",
+      "section": "Storage",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "low",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 3 about storage?",
+      "expected_answer": "This is a representative answer based on the Storage section.",
+      "section": "Storage",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about storage?",
+      "expected_answer": "This is a representative answer based on the Storage section.",
+      "section": "Storage",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about storage?",
+      "expected_answer": "This is a representative answer based on the Storage section.",
+      "section": "Storage",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about storage?",
+      "expected_answer": "This is a representative answer based on the Storage section.",
+      "section": "Storage",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    }
+  ],
+  "Instruments and Controls": [
+    {
+      "query": "Example question 1 about instruments and controls?",
+      "expected_answer": "This is a representative answer based on the Instruments and Controls section.",
+      "section": "Instruments and Controls",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about instruments and controls?",
+      "expected_answer": "This is a representative answer based on the Instruments and Controls section.",
+      "section": "Instruments and Controls",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about instruments and controls?",
+      "expected_answer": "This is a representative answer based on the Instruments and Controls section.",
+      "section": "Instruments and Controls",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about instruments and controls?",
+      "expected_answer": "This is a representative answer based on the Instruments and Controls section.",
+      "section": "Instruments and Controls",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 5 about instruments and controls?",
+      "expected_answer": "This is a representative answer based on the Instruments and Controls section.",
+      "section": "Instruments and Controls",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "high",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 6 about instruments and controls?",
+      "expected_answer": "This is a representative answer based on the Instruments and Controls section.",
+      "section": "Instruments and Controls",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    }
+  ],
+  "Lighting": [
+    {
+      "query": "Example question 1 about lighting?",
+      "expected_answer": "This is a representative answer based on the Lighting section.",
+      "section": "Lighting",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about lighting?",
+      "expected_answer": "This is a representative answer based on the Lighting section.",
+      "section": "Lighting",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about lighting?",
+      "expected_answer": "This is a representative answer based on the Lighting section.",
+      "section": "Lighting",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about lighting?",
+      "expected_answer": "This is a representative answer based on the Lighting section.",
+      "section": "Lighting",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about lighting?",
+      "expected_answer": "This is a representative answer based on the Lighting section.",
+      "section": "Lighting",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "none",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 6 about lighting?",
+      "expected_answer": "This is a representative answer based on the Lighting section.",
+      "section": "Lighting",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    }
+  ],
+  "Infotainment System": [
+    {
+      "query": "Example question 1 about infotainment system?",
+      "expected_answer": "This is a representative answer based on the Infotainment System section.",
+      "section": "Infotainment System",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about infotainment system?",
+      "expected_answer": "This is a representative answer based on the Infotainment System section.",
+      "section": "Infotainment System",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about infotainment system?",
+      "expected_answer": "This is a representative answer based on the Infotainment System section.",
+      "section": "Infotainment System",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about infotainment system?",
+      "expected_answer": "This is a representative answer based on the Infotainment System section.",
+      "section": "Infotainment System",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about infotainment system?",
+      "expected_answer": "This is a representative answer based on the Infotainment System section.",
+      "section": "Infotainment System",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about infotainment system?",
+      "expected_answer": "This is a representative answer based on the Infotainment System section.",
+      "section": "Infotainment System",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    }
+  ],
+  "Climate Controls": [
+    {
+      "query": "Example question 1 about climate controls?",
+      "expected_answer": "This is a representative answer based on the Climate Controls section.",
+      "section": "Climate Controls",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about climate controls?",
+      "expected_answer": "This is a representative answer based on the Climate Controls section.",
+      "section": "Climate Controls",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "none",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 3 about climate controls?",
+      "expected_answer": "This is a representative answer based on the Climate Controls section.",
+      "section": "Climate Controls",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about climate controls?",
+      "expected_answer": "This is a representative answer based on the Climate Controls section.",
+      "section": "Climate Controls",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about climate controls?",
+      "expected_answer": "This is a representative answer based on the Climate Controls section.",
+      "section": "Climate Controls",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "medium",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 6 about climate controls?",
+      "expected_answer": "This is a representative answer based on the Climate Controls section.",
+      "section": "Climate Controls",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    }
+  ],
+  "Driving and Operating": [
+    {
+      "query": "Example question 1 about driving and operating?",
+      "expected_answer": "This is a representative answer based on the Driving and Operating section.",
+      "section": "Driving and Operating",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about driving and operating?",
+      "expected_answer": "This is a representative answer based on the Driving and Operating section.",
+      "section": "Driving and Operating",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about driving and operating?",
+      "expected_answer": "This is a representative answer based on the Driving and Operating section.",
+      "section": "Driving and Operating",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about driving and operating?",
+      "expected_answer": "This is a representative answer based on the Driving and Operating section.",
+      "section": "Driving and Operating",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about driving and operating?",
+      "expected_answer": "This is a representative answer based on the Driving and Operating section.",
+      "section": "Driving and Operating",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about driving and operating?",
+      "expected_answer": "This is a representative answer based on the Driving and Operating section.",
+      "section": "Driving and Operating",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    }
+  ],
+  "Vehicle Care": [
+    {
+      "query": "Example question 1 about vehicle care?",
+      "expected_answer": "This is a representative answer based on the Vehicle Care section.",
+      "section": "Vehicle Care",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about vehicle care?",
+      "expected_answer": "This is a representative answer based on the Vehicle Care section.",
+      "section": "Vehicle Care",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "none",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 3 about vehicle care?",
+      "expected_answer": "This is a representative answer based on the Vehicle Care section.",
+      "section": "Vehicle Care",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about vehicle care?",
+      "expected_answer": "This is a representative answer based on the Vehicle Care section.",
+      "section": "Vehicle Care",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about vehicle care?",
+      "expected_answer": "This is a representative answer based on the Vehicle Care section.",
+      "section": "Vehicle Care",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about vehicle care?",
+      "expected_answer": "This is a representative answer based on the Vehicle Care section.",
+      "section": "Vehicle Care",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "low",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    }
+  ],
+  "Service and Maintenance": [
+    {
+      "query": "Example question 1 about service and maintenance?",
+      "expected_answer": "This is a representative answer based on the Service and Maintenance section.",
+      "section": "Service and Maintenance",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "medium",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 2 about service and maintenance?",
+      "expected_answer": "This is a representative answer based on the Service and Maintenance section.",
+      "section": "Service and Maintenance",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about service and maintenance?",
+      "expected_answer": "This is a representative answer based on the Service and Maintenance section.",
+      "section": "Service and Maintenance",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about service and maintenance?",
+      "expected_answer": "This is a representative answer based on the Service and Maintenance section.",
+      "section": "Service and Maintenance",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about service and maintenance?",
+      "expected_answer": "This is a representative answer based on the Service and Maintenance section.",
+      "section": "Service and Maintenance",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about service and maintenance?",
+      "expected_answer": "This is a representative answer based on the Service and Maintenance section.",
+      "section": "Service and Maintenance",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    }
+  ],
+  "Technical Data": [
+    {
+      "query": "Example question 1 about technical data?",
+      "expected_answer": "This is a representative answer based on the Technical Data section.",
+      "section": "Technical Data",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about technical data?",
+      "expected_answer": "This is a representative answer based on the Technical Data section.",
+      "section": "Technical Data",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about technical data?",
+      "expected_answer": "This is a representative answer based on the Technical Data section.",
+      "section": "Technical Data",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about technical data?",
+      "expected_answer": "This is a representative answer based on the Technical Data section.",
+      "section": "Technical Data",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about technical data?",
+      "expected_answer": "This is a representative answer based on the Technical Data section.",
+      "section": "Technical Data",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about technical data?",
+      "expected_answer": "This is a representative answer based on the Technical Data section.",
+      "section": "Technical Data",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    }
+  ],
+  "Customer Information": [
+    {
+      "query": "Example question 1 about customer information?",
+      "expected_answer": "This is a representative answer based on the Customer Information section.",
+      "section": "Customer Information",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about customer information?",
+      "expected_answer": "This is a representative answer based on the Customer Information section.",
+      "section": "Customer Information",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "none",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 3 about customer information?",
+      "expected_answer": "This is a representative answer based on the Customer Information section.",
+      "section": "Customer Information",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "none",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 4 about customer information?",
+      "expected_answer": "This is a representative answer based on the Customer Information section.",
+      "section": "Customer Information",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 5 about customer information?",
+      "expected_answer": "This is a representative answer based on the Customer Information section.",
+      "section": "Customer Information",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about customer information?",
+      "expected_answer": "This is a representative answer based on the Customer Information section.",
+      "section": "Customer Information",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    }
+  ],
+  "Reporting Safety Defects": [
+    {
+      "query": "Example question 1 about reporting safety defects?",
+      "expected_answer": "This is a representative answer based on the Reporting Safety Defects section.",
+      "section": "Reporting Safety Defects",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about reporting safety defects?",
+      "expected_answer": "This is a representative answer based on the Reporting Safety Defects section.",
+      "section": "Reporting Safety Defects",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about reporting safety defects?",
+      "expected_answer": "This is a representative answer based on the Reporting Safety Defects section.",
+      "section": "Reporting Safety Defects",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about reporting safety defects?",
+      "expected_answer": "This is a representative answer based on the Reporting Safety Defects section.",
+      "section": "Reporting Safety Defects",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about reporting safety defects?",
+      "expected_answer": "This is a representative answer based on the Reporting Safety Defects section.",
+      "section": "Reporting Safety Defects",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about reporting safety defects?",
+      "expected_answer": "This is a representative answer based on the Reporting Safety Defects section.",
+      "section": "Reporting Safety Defects",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    }
+  ],
+  "OnStar": [
+    {
+      "query": "Example question 1 about onstar?",
+      "expected_answer": "This is a representative answer based on the OnStar section.",
+      "section": "OnStar",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "none",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 2 about onstar?",
+      "expected_answer": "This is a representative answer based on the OnStar section.",
+      "section": "OnStar",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about onstar?",
+      "expected_answer": "This is a representative answer based on the OnStar section.",
+      "section": "OnStar",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 4 about onstar?",
+      "expected_answer": "This is a representative answer based on the OnStar section.",
+      "section": "OnStar",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about onstar?",
+      "expected_answer": "This is a representative answer based on the OnStar section.",
+      "section": "OnStar",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about onstar?",
+      "expected_answer": "This is a representative answer based on the OnStar section.",
+      "section": "OnStar",
+      "grounding_required": true,
+      "output_type": "json",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    }
+  ],
+  "Connected Services": [
+    {
+      "query": "Example question 1 about connected services?",
+      "expected_answer": "This is a representative answer based on the Connected Services section.",
+      "section": "Connected Services",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "none",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 2 about connected services?",
+      "expected_answer": "This is a representative answer based on the Connected Services section.",
+      "section": "Connected Services",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "high",
+      "reasoning_required": "high",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 3 about connected services?",
+      "expected_answer": "This is a representative answer based on the Connected Services section.",
+      "section": "Connected Services",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "none",
+      "structured_output_example": {
+        "type": "LangChain",
+        "example": {
+          "answer": "This is a structured output example for LangChain parsing."
+        }
+      }
+    },
+    {
+      "query": "Example question 4 about connected services?",
+      "expected_answer": "This is a representative answer based on the Connected Services section.",
+      "section": "Connected Services",
+      "grounding_required": true,
+      "output_type": "text",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "low",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 5 about connected services?",
+      "expected_answer": "This is a representative answer based on the Connected Services section.",
+      "section": "Connected Services",
+      "grounding_required": true,
+      "output_type": "bullets",
+      "retrieval_difficulty": "medium",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    },
+    {
+      "query": "Example question 6 about connected services?",
+      "expected_answer": "This is a representative answer based on the Connected Services section.",
+      "section": "Connected Services",
+      "grounding_required": true,
+      "output_type": "table",
+      "retrieval_difficulty": "low",
+      "reasoning_required": "medium",
+      "structured_output_example": null
+    }
+  ]
+}

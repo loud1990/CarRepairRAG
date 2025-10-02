@@ -34,7 +34,7 @@ history = history[-max_messages:] if len(history) > max_messages else history
 **Location**: [`src/agent.py:18-52`](src/agent.py:18-52)
 
 ```python
-def truncate_history_by_tokens(history, max_tokens=2000, model="gpt-4o"):
+def truncate_history_by_tokens(history, max_tokens=2000, model="gpt-5-nano"):
     """Keep only recent history that fits within token budget."""
     # ... implementation
 ```

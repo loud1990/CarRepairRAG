@@ -16,7 +16,7 @@ except ImportError:
 
 system_prompt = """You are an AI assistant for car repair manuals. Use the retriever tool to answer questions, cite sources from documents."""
 
-def truncate_history_by_tokens(history, max_tokens=2000, model="gpt-4o"):
+def truncate_history_by_tokens(history, max_tokens=2000, model="gpt-5-nano"):
     """
     Keep only recent history that fits within token budget.
     
@@ -144,7 +144,7 @@ def create_agent(llm, retriever):
 
 def run_agent(user_input: str, session_id="default", retriever=None, llm=None):
     if not llm:
-        llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        llm = ChatOpenAI(model="gpt-5-nano", temperature=0)
     if not retriever:
         raise ValueError("Retriever required")
     graph = create_agent(llm, retriever)
@@ -161,7 +161,7 @@ def run_agent(user_input: str, session_id="default", retriever=None, llm=None):
     # Apply token-based truncation (enabled by default with 2500 token limit)
     max_tokens = int(os.getenv("MAX_HISTORY_TOKENS", "2500"))
     if max_tokens > 0:
-        model_name = os.getenv("OPENAI_MODEL", "gpt-4o")
+        model_name = os.getenv("OPENAI_MODEL", "gpt-5-nano")
         history = truncate_history_by_tokens(history, max_tokens, model_name)
     history_messages = []
     for msg_dict in history:
@@ -177,7 +177,7 @@ def run_agent(user_input: str, session_id="default", retriever=None, llm=None):
             continue
     initial_messages = [SystemMessage(content=system_prompt)] + history_messages + [HumanMessage(content=user_input)]
     # Configure LangGraph recursion limit (default 25). Allow override via env.
-    _rec_str = os.getenv("RECURSION_LIMIT") or os.getenv("LANGGRAPH_RECURSION_LIMIT") or "50"
+    _rec_str = os.getenv("RECURSION_LIMIT") or os.getenv("LANGGRAPH_RECURSION_LIMIT") or "25"
     try:
         _rec_limit = max(1, int(_rec_str))
     except Exception:

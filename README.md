@@ -28,29 +28,47 @@ Open your terminal or command prompt, navigate to the root directory of this pro
 pip install -r requirements.txt
 ```
 
+⚠️ IMPORTANT: The cross-encoder re-ranker requires the Sentence Transformers package, which is not yet listed in [requirements.txt](requirements.txt). Install it manually for now:
+
+```bash
+pip install sentence-transformers
+```
+
+Also add it to [requirements.txt](requirements.txt) to persist the dependency.
+
 ### Step 3: Run the Chatbot
 
-The chatbot is now modular. Use main.py as the entry point.
+The chatbot is now modular. Use [main.py](main.py) as the entry point.
 
 ```bash
 python main.py
 ```
 
-chatbot.py is legacy; redirect to main.py.
+[chatbot.py](chatbot.py) is legacy; redirect to [main.py](main.py).
 
 The chatbot should now be running and ready to use.
 
 ## Project Structure
 
-src/ contains modules (data_loader.py for PDF processing, vectorstore.py for ChromaDB management, agent.py for LangGraph RAG with memory). chroma_db/ persists the vectorstore (ignored in Git).
+[src/](src/__init__.py) contains modules ([src/data_loader.py](src/data_loader.py) for PDF processing, [src/vectorstore.py](src/vectorstore.py) for ChromaDB management, [src/agent.py](src/agent.py) for LangGraph RAG with memory). `chroma_db/` persists the vectorstore (ignored in Git).
 
 ## Adding Documents
 
-To add more PDFs (e.g., additional manuals), place them in the pdfs/ directory. Run `python main.py` (default: incremental add with dedup by source). For full rebuild (e.g., after changes), set env var REBUILD_VDB=true: `set REBUILD_VDB=true && python main.py` (Windows) or `export REBUILD_VDB=true && python main.py` (Unix).
+To add more PDFs (e.g., additional manuals), place them in the `pdfs/` directory. Run `python main.py` (default: incremental add with dedup by source). For full rebuild (e.g., after changes), set env var REBUILD_VDB=true: `set REBUILD_VDB=true && python main.py` (Windows) or `export REBUILD_VDB=true && python main.py` (Unix).
 
 ## Chat Memory
 
-The chatbot now supports conversation memory: History (last 10 messages) persists in chat_history_default.json for contextual follow-ups across runs. Type 'quit' to exit; history saves automatically.
+Conversation memory persists across runs in `chat_history_default.json`. The agent uses two complementary truncation strategies to keep prompts within budget:
+- Message-based truncation: keeps up to MAX_HISTORY_MESSAGES (default: 8) most recent turns.
+- Token-based truncation: budgets by MAX_HISTORY_TOKENS (default: 2500 tokens) and trims oldest content as needed.
+
+Configure via `.env`:
+```
+MAX_HISTORY_MESSAGES=8
+MAX_HISTORY_TOKENS=2500
+```
+
+Type 'quit' to exit; history saves automatically. Design details are documented in [HISTORY_OPTIMIZATION.md](HISTORY_OPTIMIZATION.md).
 
 ## Usage Example
 
@@ -58,7 +76,7 @@ Example query: "What is the oil change interval for the Corvette?" Follow-up: "H
 
 ## Notes
 
-Activate your virtual env (.carrepairenv ignored in Git). First run creates vectorstore (may take time for embeddings). Subsequent runs load fast. For development, check .gitignore for generated files (chroma_db/, chat_history*.json).
+Activate your virtual env (`.carrepairenv` ignored in Git). First run creates vectorstore (may take time for embeddings). Subsequent runs load fast. For development, check `.gitignore` for generated files (`chroma_db/`, `chat_history*.json`).
 
 At any time, you may type `quit` and hit enter to exit the chatbot.
 
@@ -215,3 +233,81 @@ If you disable hierarchical chunking (`HIERARCHICAL_CHUNKING=false`) and rebuild
 - Rebuild vector DB if needed (see Reindex/Rebuild section above). Dense index is loaded/built at runtime by [VectorStoreManager.get_or_create()](src/vectorstore.py:46); sparse retriever is built on demand by [VectorStoreManager.get_sparse_retriever()](src/vectorstore.py:148).
 - Persistence: Chroma collection persisted under `./chroma_db` (default in [VectorStoreManager.__init__()](src/vectorstore.py:13)).
 - Hybrid Search is drop-in; agent logic is unchanged and continues to use the injected retriever via [retriever_tool()](src/agent.py:17) and [run_agent()](src/agent.py:94).
+
+## Token Reduction & Performance Optimization
+
+Significant optimizations reduce prompt tokens by approximately 50–60% and latency by 60–75% (16s → 4–6s), yielding roughly 68% cost savings. Highlights:
+- Fixed duplicate system prompt bug in [src/agent.py](src/agent.py:105-109).
+- Compressed tool message formatting in [src/agent.py](src/agent.py:74-101).
+- Token-based history truncation (default 2500 tokens) in [src/agent.py](src/agent.py:159-162).
+- Reduced ingestion chunk size from 1000 → 600 tokens in [src/data_loader.py](src/data_loader.py:9-19).
+- Cross-encoder re-ranker reduces context over-fetching; see [src/reranker.py](src/reranker.py).
+
+Validation:
+- Run [scripts/test_token_reduction.py](scripts/test_token_reduction.py) to assert all optimizations are active and measure token deltas.
+
+Deep dive and implementation notes:
+- See [TOKEN_REDUCTION_IMPLEMENTATION.md](TOKEN_REDUCTION_IMPLEMENTATION.md).
+
+## Multi-Query Fusion (RAG-Fusion)
+
+Improves recall by expanding the user query into multiple semantically diverse variants and fusing results:
+- Query expansion via [src/query_expander.py](src/query_expander.py) supporting two modes:
+  - LLM mode: uses the LLM to generate variants.
+  - Heuristic mode: deterministic expansions including automotive synonyms (e.g., tire/tyre, hood/bonnet).
+- Rank fusion with Reciprocal Rank Fusion (RRF) across variants via [src/fusion.py](src/fusion.py).
+
+Configuration (Env):
+```
+MULTI_QUERY=false
+NUM_QUERY_VARIANTS=4
+EXPANSION_METHOD=heuristic   # {llm,heuristic}
+MULTI_QUERY_RRF_K=60
+```
+
+CLI flags:
+- --multi-query
+- --num-query-variants INT
+- --expansion-method {llm,heuristic}
+- --multi-query-rrf-k INT
+
+Examples (Windows-friendly):
+```
+python main.py --retrieval-mode hybrid --k 5 --multi-query --num-query-variants 4 --expansion-method heuristic --multi-query-rrf-k 60
+python main.py --multi-query --num-query-variants 6 --expansion-method llm
+```
+
+Notes:
+- Multi-query fusion composes cleanly with Hybrid Search; fusion is applied per retriever, then across query variants.
+- Environment variables can be set in `.env` or overridden by CLI.
+
+## Cross-Encoder Re-Ranking
+
+Two-stage retrieval improves result quality and reduces downstream token consumption:
+- Implementation: [src/reranker.py](src/reranker.py)
+- Model: cross-encoder/ms-marco-MiniLM-L-6-v2 (via Sentence Transformers)
+- Flow: retrieve initial_k candidates (default 10), re-score with the cross-encoder, and return top_n (default 3) to the agent.
+- Effect: higher precision context and smaller prompts.
+
+Dependency:
+- Requires Sentence Transformers. If you see import errors, install with:
+  ```
+  pip install sentence-transformers
+  ```
+  and add it to [requirements.txt](requirements.txt).
+
+## New Test Scripts
+
+- [scripts/test_token_reduction.py](scripts/test_token_reduction.py): Validates token reduction paths and prints before/after metrics.
+- [scripts/test_history_optimization.py](scripts/test_history_optimization.py): Exercises history truncation (message-based and token-based) to ensure deterministic behavior.
+
+Run:
+```
+python scripts/test_token_reduction.py
+python scripts/test_history_optimization.py
+```
+
+## Additional References
+
+- Token reduction implementation details: [TOKEN_REDUCTION_IMPLEMENTATION.md](TOKEN_REDUCTION_IMPLEMENTATION.md)
+- History design and parameters: [HISTORY_OPTIMIZATION.md](HISTORY_OPTIMIZATION.md)
